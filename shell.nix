@@ -6,6 +6,7 @@ let
     nixpkgs.python3
     nixpkgs.python3.pkgs.pylint
     nixpkgs.python3.pkgs.jedi
+    nixpkgs.python3.pkgs.numpy
   ];
  
 in

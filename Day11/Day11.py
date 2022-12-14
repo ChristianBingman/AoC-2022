@@ -3,10 +3,12 @@
 from sys import argv
 from enum import Enum
 from copy import deepcopy
-from math import floor
+from math import floor,inf
+from functools import reduce
+from operator import mul
 
 class Monkey:
-    def __init__(self, starting_items: list[int], operation, test, truemonkey: int, falsemonkey: int):
+    def __init__(self, starting_items: list[int], operation, test: int, truemonkey: int, falsemonkey: int):
         self.starting_items = starting_items
         self.operation = operation
         self.test = test
@@ -14,10 +16,11 @@ class Monkey:
         self.falsemonkey = falsemonkey
         self.num_inspects = 0
     
-    def inspect_items(self, divide_by_three: bool = True) -> list[tuple[int]]:
+    def inspect_items(self, divide_by_three: bool = True, lcm = inf) -> list[tuple[int]]:
         thrown_items = []
         monkey_to = -1
         for item in self.starting_items:
+            item = item % lcm
             self.num_inspects += 1
             item = floor(self.operation(item) / 3) if divide_by_three else floor(self.operation(item))
             if ((item % self.test) == 0):
@@ -43,24 +46,30 @@ def part1(monkeys: list[Monkey]) -> int:
             for key, val in to_update:
                 monkeys[val].add_item(key)
     # Find the max 2 monkeys that have touched items
+    sort_monkeys = sorted([x.num_inspects for x in monkeys])
     # Return the 2 monkeys multiplied together
-    return [x.num_inspects for x in monkeys]
+    return sort_monkeys[-1] * sort_monkeys[-2]
 
 def part2(monkeys: list[Monkey]):
+    # If we mod every item by a number that is larger than what we would mod by in our test
+    # then the mod in the test will result in the same answer
+    # We need to find the LCM
+    lcm = reduce(mul, [x.test for x in monkeys])
     num_rounds = 10000
     # For every round
-    for rnd in range(num_rounds):
-        print(rnd)
+    for _ in range(num_rounds):
         # For every monkey
         for monkey in monkeys:
             # Have monkey inspect all items and return the worry levels and to monkeys
-            to_update = monkey.inspect_items(divide_by_three=False)
+            # Also pass in our lcm to mod all of the items by
+            to_update = monkey.inspect_items(lcm=lcm, divide_by_three=False)
             # Add item to each monkeys inventory
             for key, val in to_update:
                 monkeys[val].add_item(key)
     # Find the max 2 monkeys that have touched items
+    sort_monkeys = sorted([x.num_inspects for x in monkeys])
     # Return the 2 monkeys multiplied together
-    return [x.num_inspects for x in monkeys]
+    return sort_monkeys[-1] * sort_monkeys[-2]
 
 def get_operation_fn(operation_str: list[str]):
     if operation_str[1] == "*":
